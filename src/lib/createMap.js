@@ -8,8 +8,8 @@ import getComplimentaryColor from "./getComplimentaryColor";
 import createLabelEditor from "./label-editor/createLabelEditor";
 import { createRadialGradient } from './gl/createRadialGradient';
 
-const primaryHighlightColor = "#bf2072";
-const secondaryHighlightColor = "#e56aaa";
+const primaryHighlightColor = "#bf2072"; // color of selected node
+const secondaryHighlightColor = "#e56aaa"; // color of selected node's neighbors
 const original = {
   background: '#101010',
 
@@ -23,6 +23,7 @@ const original = {
   placeLabelsHaloColor: "#000",
   placeLabelsHaloWidth: 1,
 
+  // define the color of the border of the country polygons
   color: [
     {input: '#516ebc', output: '#516ebc'},
     {input: '#00529c', output: '#00529c'},
@@ -45,9 +46,9 @@ const explorer = {
   // placeLabelsHaloColor: "#fff",
   // placeLabelsHaloWidth: 1,
 
-  background: '#030E2E',
+  background: '#2F58CD', // background color of the map
 
-  circleColor: "#EAEDEF",
+  circleColor: "#A3BDE6",
   circleStrokeColor: "#000",
   circleLabelsColor: "#FFF",
   circleLabelsHaloColor: "#111",
@@ -56,12 +57,24 @@ const explorer = {
   placeLabelsColor: "#FFF",
   placeLabelsHaloColor: "#000",
   placeLabelsHaloWidth: 0.2,
+
+  // polygon color
+  // color: [
+  //   {input: '#516ebc', output: '#013185'}, // '#AAD8E6'}, // third
+  //   {input: '#00529c', output: '#1373A9'}, // '#2B7499'}, // first
+  //   {input: '#153477', output: '#05447C'}, // '#56A9CE'}, // fourth
+  //   {input: '#37009c', output: '#013161'}, // '#2692C6'}, // second
+  //   {input: '#00789c', output: '#022D6D'}, // '#1CA0E3'},
+  //   {input: '#37549c', output: '#00154D'}, // '#00396D'},
+  //   {input: '#9c4b00', output: '#00154D'}, // '#00396D'}
+  // ]
+
   color: [
-    {input: '#516ebc', output: '#013185'}, // '#AAD8E6'},
-    {input: '#00529c', output: '#1373A9'}, // '#2B7499'},
-    {input: '#153477', output: '#05447C'}, // '#56A9CE'},
-    {input: '#37009c', output: '#013161'}, // '#2692C6'},
-    {input: '#00789c', output: '#022D6D'}, // '#1CA0E3'},
+    {input: '#516ebc', output: '#38A3A5'}, // '#AAD8E6'}, // third
+    {input: '#00529c', output: '#80ED99'}, // '#2B7499'}, // first
+    {input: '#153477', output: '#22577A'}, // '#56A9CE'}, // fourth
+    {input: '#37009c', output: '#57CC99'}, // '#2692C6'}, // second
+    {input: '#00789c', output: '#F5DEA3'}, // '#1CA0E3'},
     {input: '#37549c', output: '#00154D'}, // '#00396D'},
     {input: '#9c4b00', output: '#00154D'}, // '#00396D'}
   ]
@@ -88,6 +101,9 @@ export default function createMap() {
     map.addLayer(fastLinesLayer, "circle-layer");
     // map.addLayer(createRadialGradient(), "polygon-layer");
     labelEditor = createLabelEditor(map);
+
+    //map.moveLayer("highlighted-nodes", "place-country-1")
+    highlightCity();
   });
 
   map.on("contextmenu", (e) => {
@@ -147,6 +163,13 @@ export default function createMap() {
     showDetails(nearestCity);
 
     const includeExternal = e.originalEvent.altKey;
+
+    console.log(e.point);
+    console.log(nearestCity);
+
+    let polygon = map.querySourceFeatures("borders-source", { type: "geojson", data: config.bordersSource, });
+
+    //let debug = e.point;
     drawBackgroundEdges(e.point, repo, !includeExternal);
   });
   const bordersCollection = fetch(config.bordersSource).then((res) => res.json());
@@ -218,7 +241,41 @@ export default function createMap() {
     }
   }
 
+  // Set the filter and paint properties for the selected city
+  function highlightCity() {
+    //let nodes = [{x:462, y:357},{x:639, y:483}];
+
+    let cityLabel = [
+      "hwchase17/langchain", 
+      "microsoft/PowerToys", 
+      "AUTOMATIC1111/stable-diffusion-webui", 
+      "zotero/zotero",
+      "nerfstudio-project/nerfstudio",
+      "xswei/d3js_doc",
+      "WTFAcademy/WTF-Solidity",
+      "dlunion/CCDL",
+      "hill-a/stable-baselines",
+      "JetBrains/xodus",
+      "peregrine-lang/Peregrine",
+      "vkholodkov/nginx-upload-module",
+      "YOURLS/YOURLS",
+      "fukuball/Awesome-Laravel-Education",
+      "cure53/HTTPLeaks",
+      "roughike/SwipeSelector",
+      "alex/django-taggit",
+    ];
+
+    let points = map.querySourceFeatures("points-source", {
+      sourceLayer: "points",
+    });
+
+    let filter = ["in", "label", ...cityLabel];
+    map.setFilter("highlighted-nodes", filter);
+    //map.setFilter("highlighted-nodes", ["all", ["!=", "label", cityLabel], ["has", "label"]]);
+  } 
+
   function getPlacesGeoJSON() {
+    //let debug = labelEditor.getPlaces(); 
     return labelEditor.getPlaces();
   }
 
@@ -247,18 +304,20 @@ export default function createMap() {
   }
 
   function getBackgroundNearPoint(point) {
-    const borderFeature = map.queryRenderedFeatures(point, { layers: ["polygon-layer"] });
+    //const debug = point;
+    const borderFeature = map.queryRenderedFeatures(point, { layers: ["polygon-layer"] }); // queryRenderedFeatures() returns an array of features,  like colors
     return borderFeature[0];
   }
 
   function drawBackgroundEdges(point, repo, ignoreExternal = true) {
-    const bgFeature = getBackgroundNearPoint(point);
+    const bgFeature = getBackgroundNearPoint(point); 
     if (!bgFeature) return;
     const groupId = bgFeature.id;
     if (groupId === undefined) return;
 
-    const fillColor = getPolygonFillColor(bgFeature.properties);
-    let complimentaryColor = getComplimentaryColor(fillColor);
+    const fillColor = getPolygonFillColor(bgFeature.properties); // bgFeature.properties.fill;
+
+    let complimentaryColor = getComplimentaryColor(fillColor); // "#37009c" -> "#013161"
     fastLinesLayer.clear();
     backgroundEdgesFetch?.cancel();
     let isCancelled = false;
@@ -349,7 +408,18 @@ export default function createMap() {
   }
 }
 
+function getPolygonStars(){
+  // retrieve stars here
+  var stars = 5;
+  return stars;
+}
+
 function getDefaultStyle() {
+  // Loop through the features in the config.bordersSource data and add a "stars" property to each feature
+  for (var i = 0; config.bordersSource.features; i++) {
+    config.bordersSource.features[i].properties.stars = getPolygonStars();
+  }
+
   return {
     hash: true,
     container: "map",
@@ -359,7 +429,7 @@ function getDefaultStyle() {
       version: 8,
       glyphs: config.glyphsSource,
       sources: {
-        "borders-source": { type: "geojson", data: config.bordersSource, },
+        "borders-source": { type: "geojson", data: config.bordersSource, }, // data retrieve
         "points-source": {
           type: "vector",
           tiles: [config.vectorTilesTiles],
@@ -390,14 +460,14 @@ function getDefaultStyle() {
         "paint": {
           "background-color": currentColorTheme.background
         }
-      },
+        },
         {
           "id": "polygon-layer",
           "type": "fill",
           "source": "borders-source",
           "filter": ["==", "$type", "Polygon"],
           "paint": {
-            "fill-color": colorStyle
+            "fill-color": colorStyle //'fill-color': { property: 'median-income', stops: [[20000, '#fff'], [120000, '#f00']] }
           }
         },
         {
@@ -444,6 +514,23 @@ function getDefaultStyle() {
               23, ["*", ["get", "size"], 1.5],
             ]
           }
+        },
+        {
+          id: "highlighted-nodes",
+          "type": "circle",
+          "source": "points-source",
+          "source-layer": "points",
+          paint: {
+            "circle-color": "red",
+            "circle-radius": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              1, ["*", 2, ["get", "size"]],  // At zoom level 1, circle radius is 4 times the pointSize
+              8, ["*", 2, ["get", "size"]],  // At zoom level 8, circle radius is 2 times the pointSize
+            ],
+            "circle-opacity": 1, 
+          },
         },
         {
           "id": "label-layer",
@@ -508,48 +595,48 @@ function getDefaultStyle() {
           },
         },
         // TODO: move labels stuff to label editor?
-{
-    "id": "place-country-1",
-    // minzoom: 1, 
-    "maxzoom": 10,
-    "type": "symbol",
-    "source": "place",
-    "layout": {
-        "text-font": [ "Roboto Condensed Bold" ],
-        "text-size": [
-          "interpolate",
-          [ "cubic-bezier", 0.2, 0, 0.7, 1 ],
-          ["zoom"],
-          1, [
-            "step",
-            ["get", "symbolzoom"], 15, 
-            4, 13, 
-            5, 12
-          ],
-          9, [
-            "step",
-            ["get", "symbolzoom"], 22,
-            4, 19,
-            5, 17
-          ]
-        ],
-        "symbol-sort-key": ["get", "symbolzoom"],
-        "text-field": "{name}",
-        "text-max-width": 6,
-        "text-line-height": 1.1,
-        "text-letter-spacing": 0,
-    },
-    "paint": {
-      "text-color": currentColorTheme.placeLabelsColor,
-      "text-halo-color": currentColorTheme.placeLabelsHaloColor,
-      "text-halo-width": currentColorTheme.placeLabelsHaloWidth,
-    },
-    "filter": [
-        "<=",
-        ["get", "symbolzoom"],
-        ["+", ["zoom"], 4]
-      ],
-},
+        {
+          "id": "place-country-1",
+          // minzoom: 1, 
+          "maxzoom": 10,
+          "type": "symbol",
+          "source": "place",
+          "layout": {
+              "text-font": [ "Roboto Condensed Bold" ],
+              "text-size": [
+                "interpolate",
+                [ "cubic-bezier", 0.2, 0, 0.7, 1 ],
+                ["zoom"],
+                1, [
+                  "step",
+                  ["get", "symbolzoom"], 15, 
+                  4, 13, 
+                  5, 12
+                ],
+                9, [
+                  "step",
+                  ["get", "symbolzoom"], 22,
+                  4, 19,
+                  5, 17
+                ]
+              ],
+              "symbol-sort-key": ["get", "symbolzoom"],
+              "text-field": "{name}",
+              "text-max-width": 6,
+              "text-line-height": 1.1,
+              "text-letter-spacing": 0,
+          },
+          "paint": {
+            "text-color": currentColorTheme.placeLabelsColor,
+            "text-halo-color": currentColorTheme.placeLabelsHaloColor,
+            "text-halo-width": currentColorTheme.placeLabelsHaloWidth,
+          },
+          "filter": [
+              "<=",
+              ["get", "symbolzoom"],
+              ["+", ["zoom"], 4]
+            ],
+        },
       ]
     },
   };
@@ -563,6 +650,7 @@ function getPolygonFillColor(polygonProperties) {
   }
   return polygonProperties.fill;
 }
+<<<<<<< Updated upstream
 function polygonContainsPoint(ring, pX, pY) {
     let c = false;
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -574,3 +662,5 @@ function polygonContainsPoint(ring, pX, pY) {
     }
     return c;
 }
+=======
+>>>>>>> Stashed changes

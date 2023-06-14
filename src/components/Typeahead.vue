@@ -6,6 +6,7 @@
       <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-info"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
   </a>
     <input
+      class="search-input"
       ref='input' autofocus
       type='text'
       autocomplete='off'
@@ -262,6 +263,8 @@ img.avatar {
   flex-direction: row;
   align-items: stretch;
   background: var(--color-background-soft);
+  border: 1px solid #161616;
+  border-radius: 10px;
 }
 
 .menu-opener {
@@ -269,6 +272,8 @@ img.avatar {
   align-items: center;
   padding: 0 8px;
   background: var(--color-background-soft);
+  border: 1px solid #161616;
+  border-radius: 10px;
 }
 
 .menu-opener:hover, .menu-opener:focus {
@@ -287,6 +292,8 @@ img.avatar {
   width: 48px;
   justify-content: center;
   outline: none;
+  border: 1px solid #161616;
+  border-radius: 10px;
 }
 
 .search-submit:hover, .search-submit:focus {
@@ -345,8 +352,8 @@ input[type='text'] {
   padding-right: 48px;
   padding-left: 10px;
   font-size: 18px;
-  border: 0;
-  border-radius: 0;
+  border: 1px solid #161616;
+  border-radius: 10px;
   background: var(--color-background-soft);
   color: var(--color-text);
 }

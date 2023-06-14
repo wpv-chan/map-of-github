@@ -165,12 +165,12 @@ async function listCurrentConnections() {
     <div class="unsaved-changes" v-if='hasUnsavedChanges'>
       You have unsaved labels in local storage. <a href="#" @click.prevent="showUnsavedChanges()" class="normal">Click here</a> to see them.
     </div>
-    <div class="made-by">
+    <!-- <div class="made-by">
       Made by
       <a class="normal" aria-label="Made by @anvaka" target="_blank" href="https://github.com/sponsors/anvaka">
         @anvaka
       </a>
-    </div>
+    </div> -->
     <largest-repositories :repos="currentGroup" v-if="currentGroup"
       class="right-panel"
       @selected="findProject"
@@ -229,11 +229,13 @@ async function listCurrentConnections() {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 -1px 0px rgba(0, 0, 0, 0.02);
   height: 48px;
   font-size: 16px;
-  margin-top: 16px;
+  margin-top: 8px;
   padding: 0;
   cursor: text;
   left: 8px;
   width: calc(var(--side-panel-width) - 8px);
+  border: 1px solid #161616;
+  border-radius: 10px;
 }
 .tooltip {
   position: absolute;

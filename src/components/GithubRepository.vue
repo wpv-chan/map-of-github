@@ -210,8 +210,13 @@ h2 {
 
 .repo-viewer {
   padding-top: 70px;
-  padding-left: 8px;
-  padding-right: 8px;
+  padding-left: 10px;
+  padding-right: 10px;
+
+  border: 1px solid #161616;
+  border-radius: 10px;
+  margin-top: 5px;
+  margin-left: 5px;
 }
 
 h2 a {
